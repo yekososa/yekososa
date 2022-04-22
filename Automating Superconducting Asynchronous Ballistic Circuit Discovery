@@ -1,0 +1,230 @@
+from random import random, randrange
+
+boardSize = 8
+Row = 0
+Col = 0
+numOfQueens = 0
+iterations = 0
+
+
+#utility function
+def PrintBoard():
+   for j in xrange(boardSize):
+       print(Board[j])
+
+def solution(itr):
+  for j in xrange(boardSize):
+      for i in xrange(boardSize):
+          if Board[i][j] == 1:
+              if NoCollisions(j,i,itr) == True:
+                  continue
+              else:
+                  return False
+  return True
+
+def NoCollisions(Col,Row,itr):
+   print("Checking if there is collisions")
+   #First we must remove the queen at this spot
+   removeQueen(Col,Row,itr)
+
+   countLeft = 1
+   countRight = 1
+   for i in xrange(boardSize):
+       # This is what we call Left Diagnols
+       if Col - countLeft >= 0:
+           #checks up diagonal
+           if Row - countLeft >= 0:
+               if Board[Row - countLeft][Col - countLeft] == 1:
+                   PlaceQueen(Col,Row,itr)
+                   return False
+           #checks down diagonal
+           if Row + countLeft < boardSize:
+               if Board[Row + countLeft][Col - countLeft] == 1:
+                   PlaceQueen(Col,Row,itr)
+                   return False
+           countLeft += 1
+       # This is what we call Right Diagnols
+       if Col + countRight < boardSize:
+           #checks up
+           if Row - countRight >= 0:
+               if Board[Row - countRight][Col + countRight] == 1:
+                   PlaceQueen(Col,Row,itr)
+                   return False
+           #checks down
+           if Row + countRight < boardSize:
+               if Board[Row + countRight][Col + countRight] == 1:
+                   PlaceQueen(Col,Row,itr)
+                   return False
+           countRight += 1
+       #checks Row
+       if Board[Row][i] == 1:
+           PlaceQueen(Col,Row,itr)
+           return False
+       #checks Col
+       if Board[i][Col] == 1:
+           PlaceQueen(Col,Row,itr)
+           return False
+   PlaceQueen(Col,Row,itr)
+   return True
+
+def hillClimb(itr):
+   changes = 0
+   for col in xrange(boardSize):
+       tempTruth = boardSize
+       tempRow = 0
+       foundRow = 0
+       #For 0-boardsize col. Check every row.
+       for j in xrange(boardSize):
+           if Truth[j][col] < tempTruth:
+               tempTruth = Truth[j][col]
+               tempRow = j
+       #now it will have picked the best spot on the row
+
+       for j in xrange(boardSize):
+           if Board[j][col] == 1:
+               foundRow = j
+
+       #now it will have found the spot w the queen
+       print("Col: ",col)
+       print("Lowest Truth: ",tempTruth, " Row thought to b:",tempRow," Found: ", foundRow)
+       #compare if the best spot is where the queen is
+       if tempRow != foundRow:
+           removeQueen(col,foundRow,itr)
+           PlaceQueen(col,tempRow,itr)
+           if NoCollisions(col,tempRow,itr) == True:
+               continue #to next column
+           else:
+               break
+
+
+
+def initialBoard(itr):
+   queenExists = 0
+   col = 0
+   while(col < boardSize):
+       queenExists = 0
+       for j in xrange(boardSize):
+           if Board[j][col] == 1: #queen on line, check next column
+               col+=1
+               queenExists+=1
+               break
+       if queenExists == 0:
+           row = randrange(0, boardSize)
+           PlaceQueen(col,row,itr)
+           col+=1
+
+
+def shuffleRandCol(itr):
+   col = randrange(0,boardSize)
+   for j in xrange(boardSize):
+       if Board[j][col] == 1: #queen here
+           removeQueen(col,j,itr)
+           PlaceQueen(col,randrange(0,boardSize),itr)
+
+
+def  PlaceQueen(Col, Row,itr):
+   itr+=1
+   # This is what we call Left Diagnols
+   print("Im Placing...")
+   countLeft = 1
+   countRight = 1
+   for i in xrange(boardSize):
+       if Col - countLeft >= 0:
+           if Row - countLeft >= 0:
+               Truth[Row - countLeft][Col - countLeft] += 1
+           if Row + countLeft < boardSize:
+               Truth[Row + countLeft][Col - countLeft] += 1
+           countLeft += 1
+       # This is what we call Right Diagnols
+       if Col + countRight < boardSize:
+           if Row - countRight >= 0:
+               Truth[Row - countRight][Col + countRight] += 1
+           if Row + countRight < boardSize:
+               Truth[Row + countRight][Col + countRight] += 1
+           countRight += 1
+
+
+   for j in xrange(boardSize):
+       Truth[j][Col] += 1
+       Truth[Row][j] += 1
+   Truth[Row][Col] -=1
+   Board[Row][Col] = 1
+
+   PrintBoard()
+
+def removeQueen(Col, Row,itr):
+   itr+=1
+   print("Im Removing...")
+   # This is what we call Left Diagnols
+   countLeft = 1
+   countRight = 1
+   for i in xrange(boardSize):
+       if Col - countLeft >= 0:
+           if Row - countLeft >= 0:
+               Truth[Row - countLeft][Col - countLeft] -= 1
+           if Row + countLeft < boardSize:
+               Truth[Row + countLeft][Col - countLeft] -= 1
+           countLeft += 1
+       # This is what we call Right Diagonals
+       if Col + countRight < boardSize:
+           if Row - countRight >= 0:
+               Truth[Row - countRight][Col + countRight] -= 1
+           if Row + countRight < boardSize:
+               Truth[Row + countRight][Col + countRight] -= 1
+           countRight += 1
+   #prints up down left right
+   for j in xrange(boardSize):
+       Truth[Row][j] -= 1
+       Truth[j][Col] -= 1
+   #queen removed from spot
+   Truth[Row][Col]+=1
+   Board[Row][Col] = 0
+   PrintBoard()
+
+# Beginning of Main Code
+#Creates our board and TruthTable Arrays
+Board = []
+for i in xrange(boardSize):
+   row = []
+   for j in xrange(boardSize):
+       row.append(0)
+   Board.append(row)
+
+#Creates true values for posible queen pos
+Truth = []
+for i in xrange(boardSize):
+   truthRow = []
+   for j in xrange(boardSize):
+       truthRow.append(0)
+   Truth.append(truthRow)
+
+
+#Tries to find the solution by hill climbing?..
+
+#PlaceQueen(0,1)
+#PlaceQueen(1,3)
+#PlaceQueen(2,0)
+#PlaceQueen(3,2)
+
+
+
+initialBoard(iterations)
+print("This is the initial state: ")
+PrintBoard()
+
+
+while(iterations < 1000):
+   iterations+=1
+   hillClimb(iterations) #optimizing. checking every col. Determining best spot vs actual. and doing this till no collisions.
+   if solution(iterations)==True:
+      print("Solution")
+      print("Iterations: ",iterations)
+      PrintBoard()
+      exit(0)
+   else:
+       shuffleRandCol(iterations)
+       continue
+
+   print("Iterations: ",iterations)
+   PrintBoard()
+ 
